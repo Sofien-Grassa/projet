@@ -4,6 +4,7 @@ const fs = require('fs');
 const pdfParse = require('pdf-parse');
 const nlp = require('compromise');
 const CV = require('../models/Cv.model'); // Importer le modèle CV
+const TestResultat = require('../models/TestResultat.model'); // Importer le modèle CV
 
 // Configuration de Multer
 const storage = multer.diskStorage({
@@ -21,9 +22,9 @@ const upload = multer({ storage });
 
 // Liste des compétences à rechercher (modifiez selon vos besoins)
 const skillsList = [
-    "Project Management", "Public Relations", ".net", "Time Management",
-    "Leadership", "Effective Communication", "Critical Thinking", "sql",
-    "JavaScript", "React js", "Php"
+    "Python", "C#", ".Net", "Angular",
+    "JavaScript", "NoSQL", "TypeScript", "Sql",
+    "Vue.js", "React", "Php", "Node.js", "Ajax","Jquery","C","Java"
 ];
 
 // Fonction pour extraire des compétences en utilisant compromise et expressions régulières
@@ -65,7 +66,12 @@ const upload_cv = async (req, res) => {
         if (!email) {
             return res.status(400).json({ message: "L'email est requis pour enregistrer un CV." });
         }
-
+        const existingCv = await CV.findOne({ email: email, fileName: req.file.originalname });
+        if (existingCv) {
+            return res.status(409).json({
+                message: "Un CV avec le même nom de fichier et email existe déjà. Upload refusé.",
+            });
+        }
         let extractedText = '';
         if (ext === '.pdf') {
             extractedText = await extractTextFromPDF(filePath); // Lecture PDF
@@ -135,12 +141,17 @@ const deleteCv = async (req, res) => {
             return res.status(404).json({ message: "CV non trouvé." });
         }
 
-        res.json({ message: "CV supprimé avec succès.", deletedCv });
+        // Supprimer les tests associés à l'email du CV supprimé
+        await TestResultat.deleteMany({ email: deletedCv.email });
+
+        res.json({
+            message: "CV et tests associés supprimés avec succès.",
+            deletedCv,
+        });
     } catch (error) {
         console.error("Erreur lors de la suppression du CV :", error);
         res.status(500).send("Erreur lors de la suppression du CV.");
     }
 };
-
 
 module.exports = { upload_cv, upload, getCvByEmail, deleteCv };

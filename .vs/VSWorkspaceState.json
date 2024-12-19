@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\controllers",
-    "\\models"
+    "\\models",
+    "\\uploads"
   ],
-  "SelectedNode": "\\routes.js",
+  "SelectedNode": "\\.gitignore",
   "PreviewInSolutionExplorer": false
 }
